@@ -68,17 +68,9 @@ class ScrapeGucci(Scrape):
 def main():
     urls = [
         # {
-        #     "type": "details",
-        #     "url": "https://www.gucci.com/us/en/pr/men/bags-for-men/messengers-crossbody-bags-for-men/gucci-b-large-shoulder-bag-p-801041AZB5Z1060"
-        # },
-        {
-            "type": "details",
-            "url": "https://www.gucci.com/us/en/pr/men/bags-for-men/messengers-crossbody-bags-for-men/gucci-b-large-shoulder-bag-p-801041AZB5Z1060"
-        },
-        {
-            "type": "search",
-            "url": "https://www.gucci.com/us/en/st/newsearchpage?searchString=bag&search-cat=header-search"
-        },
+        #     "type": "search",
+        #     "url": "https://www.mrporter.com/en-us/mens/clothing?facet=ads_f11001_ntk_cs%253A%2522ACNE%2BSTUDIOS%2522&facet=ads_f11001_ntk_cs%253A%2522A.P.C.%2522&facet=ads_f11001_ntk_cs%253A%2522AMI%2BPARIS%2522&facet=ads_f11001_ntk_cs%253A%2522AMIRI%2522&facet=ads_f11001_ntk_cs%253A%2522BALENCIAGA%2522&facet=ads_f11001_ntk_cs%253A%2522BODE%2522&facet=ads_f11001_ntk_cs%253A%2522BOTTEGA%2BVENETA%2522&facet=ads_f11001_ntk_cs%253A%2522BRUNELLO%2BCUCINELLI%2522&facet=ads_f11001_ntk_cs%253A%2522LEMAIRE%2522&facet=ads_f11001_ntk_cs%253A%2522OUR%2BLEGACY%2522"
+        # }
     ]
     scrape = ScrapeGucci(urls)
     scrape.scrape()

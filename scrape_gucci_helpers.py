@@ -31,9 +31,7 @@ def extract_product_box(product_info_box):
     details_dict = {}
     header = product_info_box.find("div", {"class": "productnameandprice-container-standard"})
     details_dict["name"] = header.find("h1", {"class": "product-detail-product-name"}).text.strip()
-    details_dict["price"] = header.find("div", {"class": "product-detail-price-column"}).text.strip().encode("ascii",
-                                                                                                             "ignore").decode(
-        "ascii")
+    details_dict["price"] = header.find("div", {"class": "product-detail-price-column"}).text.strip().encode("ascii", "ignore").decode("ascii")
 
     shipping = product_info_box.find("div", {"class": "shipping-info"})
     details_dict["shipping_title"] = shipping.find("p", {"class": "title"}).text.strip()
@@ -51,8 +49,9 @@ def extract_product_details(text):
     for p in soup.find("div", {"class": "slick-track"}).find_all("picture"):
         details_dict["images"].append("https:" + p.find("img")["srcset"].replace("490x490", "2400x2400"))
 
-    details_dict["tags"] = [x.text.strip().encode("ascii", "ascii").decode("ascii") for x in
-                            soup.find("div", "breadcrumb-icons-bg").find("nav", {"class": "breadcrumb"}).find_all("li")]
+    details_dict["tags"] = [
+        x.text.strip().encode("ascii", "ascii").decode("ascii") for x in soup.find("div", "breadcrumb-icons-bg").find("nav", {"class": "breadcrumb"}).find_all("li")
+    ]
 
     links = soup.find_all("a", href=True)
     urls = []
@@ -71,7 +70,7 @@ def extract_product_details(text):
     return details_dict, urls
 
 
-def find_links(text):
+def find_gucci_item_links(text):
     soup = BeautifulSoup(text, "html.parser")
     result_grid = soup.find("div", {"class": "SearchResultGrid_productsGrid"})
     result_grid = result_grid.find_all("div", {"class": "SearchResultGrid_productsCell"})
@@ -79,10 +78,22 @@ def find_links(text):
         result = result.find("a", {"class": "ProductCard_productCard"})
         split = result["href"].split("/")
 
-        if split[3] in ["ca", "pr"]:
+        if split[3] == "pr":
             yield {
-                "type": split[3],
+                "type": "details",
                 "url": "https://www.gucci.com" + result["href"] if result["href"][0] == "/" else result["href"]
             }
+        # elif split[3] == "ca":
+        #     yield {
+        #         "type": "details",
+        #         "url": "https://www.gucci.com" + result["href"] if result["href"][0] == "/" else result["href"]
+        #     }
 
     return None
+
+
+def extract_gucci(text, url):
+    d, _ = extract_product_details(text)
+    d["raw_tags"] = url.split("pr")[1].split("/")[1:-1]
+
+    return d
