@@ -3,6 +3,7 @@ import json
 import os
 import types
 
+import selenium
 from seleniumbase import SB
 from tqdm import tqdm
 from selenium.webdriver.support.wait import WebDriverWait
@@ -88,34 +89,37 @@ class Scrape:
         file_name = self.file_name(url)
         with open(file_name, "w") as f:
             f.write(text)
-            print(f"saved {file_name}")
 
     def scrape_single_page(self, url, implicitly_wait=5, load_wait=5):
         text = self.load_from_cache(url)
         if text is not None:
             return text
+        try:
+            with SB(**self.sb_params) as sb:
+                sb.driver.get(url)
+                sb.driver.implicitly_wait(implicitly_wait)
+                sb.wait(load_wait)
 
-        with SB(**self.sb_params) as sb:
-            sb.driver.get(url)
-            sb.driver.implicitly_wait(implicitly_wait)
-            sb.wait(load_wait)
+                if self.product_page_removes is not None:
+                    for remove in self.product_page_removes:
+                        sb.driver.execute_script("[...document.querySelectorAll('" + remove + "')].map(el => el.parentNode.removeChild(el))")
 
-            if self.product_page_removes is not None:
-                for remove in self.product_page_removes:
-                    sb.driver.execute_script("[...document.querySelectorAll('" + remove + "')].map(el => el.parentNode.removeChild(el))")
+                if self.image_slider_container is not None:
+                    next_image = sb.driver.find_element(By.CSS_SELECTOR, self.image_slider_container)
+                    next_image = next_image.find_element(By.CSS_SELECTOR, self.image_slider_next)
+                    sb.driver.execute_script("arguments[0].scrollIntoView();", next_image)
+                    WebDriverWait(sb.driver, implicitly_wait).until(ExpectedConditions.element_to_be_clickable(next_image))
 
-            if self.image_slider_container is not None:
-                next_image = sb.driver.find_element(By.CSS_SELECTOR, self.image_slider_container)
-                next_image = next_image.find_element(By.CSS_SELECTOR, self.image_slider_next)
-                sb.driver.execute_script("arguments[0].scrollIntoView();", next_image)
-                WebDriverWait(sb.driver, implicitly_wait).until(ExpectedConditions.element_to_be_clickable(next_image))
+                    for i in range(self.n_slides):
+                        next_image.click()
+                        sb.wait(load_wait)
 
-                for i in range(self.n_slides):
-                    next_image.click()
-                    sb.wait(load_wait)
-
-            self.save_to_cache(url, sb.driver.page_source)
-            return sb.driver.page_source
+                self.save_to_cache(url, sb.driver.page_source)
+                return sb.driver.page_source
+        except selenium.common.exceptions.TimeoutException:
+            return self.scrape_single_page(url, implicitly_wait, load_wait)
+        except Exception as e:
+            return None
 
     def scrape(self):
         progress_bar = tqdm(total=1000)
@@ -140,15 +144,14 @@ class Scrape:
                     "source": source
                 }
                 text = self.scrape_single_page(url)
-                details = {**self.extract_details(text, url), **details}
+                if text is not None:
+                    details = {**self.extract_details(text, url), **details}
 
-                json_location = dataset_location + f"/{details["source"]}/" + "/".join(details["raw_tags"]) + "/"
-                os.makedirs(json_location, exist_ok=True)
-                json_location = json_location + url.split('/')[-2] + "-" + name + ".json"
-                with open(json_location, "w") as f:
-                    json.dump(details, f, indent=4)
-
-                # print(json.dumps(details, indent=4))
+                    json_location = dataset_location + f"/{details["source"]}/" + "/".join(details["raw_tags"]) + "/"
+                    os.makedirs(json_location, exist_ok=True)
+                    json_location = json_location + url.split('/')[-2] + "-" + name + ".json"
+                    with open(json_location, "w") as f:
+                        json.dump(details, f, indent=4)
             if url_type == "search":
                 text = self.scrape_product_search_results(url)
 
@@ -159,6 +162,33 @@ class Scrape:
                         txt = list(self.extract_item_links(txt))
                         self.urls.extend(txt)
                         progress_bar.set_postfix({"total": len(self.urls)})
-                        # progress_bar.n = len(self.urls)
-                # print(len(links))
-                # print(json.dumps(links, indent=4))
+
+
+class ScrapeMultiPageSearch(Scrape):
+    def scrape_product_search_results(self, url, implicitly_wait=5, load_wait=5, scroll_wait=5, page=20, current_page=0):
+        if current_page != 0:
+            new_url = url + "&pageNumber=" + str(current_page + 1)
+        else:
+            new_url = url
+
+        text = self.load_from_cache(new_url)
+        if text is None:
+            try:
+                with SB(**self.sb_params) as sb:
+                    sb.driver.get(new_url)
+                    sb.driver.implicitly_wait(implicitly_wait)
+                    sb.wait(load_wait)
+                    self.save_to_cache(new_url, sb.driver.page_source)
+                    yield sb.driver.page_source
+            except selenium.common.exceptions.TimeoutException:
+                yield from self.scrape_product_search_results(url, implicitly_wait, load_wait, scroll_wait, page, current_page)
+            except Exception as e:
+                print(e)
+                return None
+        else:
+            yield text
+
+        if current_page < page - 1:
+            yield from self.scrape_product_search_results(url, implicitly_wait, load_wait, scroll_wait, page, current_page+1)
+
+        return None

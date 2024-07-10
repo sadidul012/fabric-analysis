@@ -1,38 +1,10 @@
 import re
 
 from bs4 import BeautifulSoup
-from seleniumbase import SB
-
-from scrape import Scrape
+from scrape import ScrapeMultiPageSearch
 
 
-class ScrapeNetAPorter(Scrape):
-    def scrape_product_search_results(self, url, implicitly_wait=5, load_wait=5, scroll_wait=5, page=20, current_page=0):
-        if current_page != 0:
-            new_url = url + "&pageNumber=" + str(current_page + 1)
-        else:
-            new_url = url
-
-        text = self.load_from_cache(new_url)
-        if text is None:
-            try:
-                with SB(**self.sb_params) as sb:
-                    sb.driver.get(new_url)
-                    sb.driver.implicitly_wait(implicitly_wait)
-                    sb.wait(load_wait)
-                    self.save_to_cache(new_url, sb.driver.page_source)
-                    yield sb.driver.page_source
-            except Exception as e:
-                print(e)
-                return None
-        else:
-            yield text
-
-        if current_page < page - 1:
-            yield from self.scrape_product_search_results(url, implicitly_wait, load_wait, scroll_wait, page, current_page+1)
-
-        return None
-
+class ScrapeNetAPorter(ScrapeMultiPageSearch):
     def extract_details(self, text, url):
         soup = BeautifulSoup(text, "html.parser")
         basic_info = soup.find("div", {"class": "ProductDetails87__basicInfo"})
