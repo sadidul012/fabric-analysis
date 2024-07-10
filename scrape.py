@@ -124,7 +124,7 @@ class Scrape:
                 with open(json_location, "w") as f:
                     json.dump(details, f, indent=4)
 
-                print(json.dumps(details, indent=4))
+                # print(json.dumps(details, indent=4))
             if url_type == "search":
                 text = self.scrape_product_search_results(url)
                 links = []
@@ -136,6 +136,6 @@ class Scrape:
                         txt = list(self.extract_item_links(txt))
                         links.extend(txt)
 
-                print(len(links))
-                print(json.dumps(links, indent=4))
-                # urls.extend(list(links))
+                # print(len(links))
+                # print(json.dumps(links, indent=4))
+                self.urls.extend(list(links))

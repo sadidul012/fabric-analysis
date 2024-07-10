@@ -6,7 +6,7 @@ from seleniumbase import SB
 from scrape import Scrape
 
 
-class ScrapeMrPorter(Scrape):
+class ScrapeNetAPorter(Scrape):
     def scrape_product_search_results(self, url, implicitly_wait=5, load_wait=5, scroll_wait=5, page=2, current_page=0):
         if current_page != 0:
             new_url = url + "&pageNumber=" + str(current_page + 1)
@@ -43,11 +43,11 @@ class ScrapeMrPorter(Scrape):
                 metadata[m.get('property')] = m.get('content')
 
         self.add_metadata(metadata)
-
-        self.add_name(basic_info.select_one("h1.ProductInformation87__designer.ProductInformation87__designer--stickyCta").text)
-        self.add_subtitle(basic_info.select_one("p.ProductInformation87__name.ProductInformation87__name--stickyCta").text)
-        self.add_price(basic_info.select_one("span.PriceWithSchema10__value.PriceWithSchema10__value--details").text)
         self.add_raw_tags(url.split("product")[1].split("/")[1:-1])
+
+        self.add_name(basic_info.select_one("h1.ProductInformation87__designer").text)
+        self.add_subtitle(basic_info.select_one("p.ProductInformation87__name").text)
+        self.add_price(basic_info.select_one("span.PriceWithSchema10__value.PriceWithSchema10__value--details").text)
 
         info = soup.select_one("div.EditorialAccordion87.EditorialAccordion87--pdpAccordion.ProductDetails87__editorialAccordion")
         self.add_description(info.select_one("div.AccordionSection3#EDITORS_NOTES div.content").text)
@@ -59,7 +59,7 @@ class ScrapeMrPorter(Scrape):
         # for source in sources:
         #     print(source)
 
-        # print(len(soup.select("div.ImageCarousel87__viewport li.ImageCarousel87__slide img[src]")))
+        # # print(len(soup.select("div.ImageCarousel87__viewport li.ImageCarousel87__slide img[src]")))
         lis = info.select("div.AccordionSection3#SIZE_AND_FIT div.content li") + info.select("div.AccordionSection3#DETAILS_AND_CARE div.content li")
         for li in lis:
             if re.match("Model measures(.)*", li.text):
@@ -79,7 +79,7 @@ class ScrapeMrPorter(Scrape):
             if split[3] == "product":
                 yield {
                     "type": "details",
-                    "url": "https://www.mrporter.com" + result["href"] if result["href"][0] == "/" else result["href"]
+                    "url": "https://www.net-a-porter.com" + result["href"] if result["href"][0] == "/" else result["href"]
                 }
         return None
 
@@ -88,15 +88,15 @@ def main():
     urls = [
         {
             "type": "search",
-            "url": "https://www.mrporter.com/en-us/mens/clothing?facet=ads_f11001_ntk_cs%253A%2522ACNE%2BSTUDIOS%2522&facet=ads_f11001_ntk_cs%253A%2522A.P.C.%2522&facet=ads_f11001_ntk_cs%253A%2522AMI%2BPARIS%2522&facet=ads_f11001_ntk_cs%253A%2522AMIRI%2522&facet=ads_f11001_ntk_cs%253A%2522BALENCIAGA%2522&facet=ads_f11001_ntk_cs%253A%2522BODE%2522&facet=ads_f11001_ntk_cs%253A%2522BOTTEGA%2BVENETA%2522&facet=ads_f11001_ntk_cs%253A%2522BRUNELLO%2BCUCINELLI%2522&facet=ads_f11001_ntk_cs%253A%2522LEMAIRE%2522&facet=ads_f11001_ntk_cs%253A%2522OUR%2BLEGACY%2522"
+            "url": "https://www.net-a-porter.com/en-us/shop/clothing?facet=ads_f10003_ntk_cs%253A%2522BOTTEGA%2BVENETA%2522&facet=ads_f10003_ntk_cs%253A%2522BRUNELLO%2BCUCINELLI%2522&facet=ads_f10003_ntk_cs%253A%2522CHLO%25C3%2589%2522&facet=ads_f10003_ntk_cs%253A%2522CULT%2BGAIA%2522&facet=ads_f10003_ntk_cs%253A%2522ELIE%2BSAAB%2522&facet=ads_f10003_ntk_cs%253A%2522GANNI%2522&facet=ads_f10003_ntk_cs%253A%2522JACQUEMUS%2522&facet=ads_f10003_ntk_cs%253A%2522THE%2BROW%2522&facet=ads_f10003_ntk_cs%253A%2522MARNI%2522&facet=ads_f10003_ntk_cs%253A%2522MAX%2BMARA%2522"
         },
         # {
         #     "type": "details",
-        #     "url": "https://www.mrporter.com/en-us/mens/product/brunello-cucinelli/clothing/plain-t-shirts/silk-and-cotton-blend-jersey-t-shirt/1647597341958447"
+        #     "url": "https://www.net-a-porter.com/en-us/shop/product/the-row/clothing/blazers/marina-oversized-wool-blazer/1647597332737226"
         # }
     ]
     # &pageNumber=2
-    scrape = ScrapeMrPorter(urls)
+    scrape = ScrapeNetAPorter(urls)
     scrape.scrape()
 
 
