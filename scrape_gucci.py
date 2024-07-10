@@ -36,10 +36,6 @@ def scrape_website(url, implicitly_wait=5, load_wait=5, scroll_wait=5, page=None
         except Exception as e:
             print(e)
 
-        # if scroll:
-        #     sb.driver.execute_script("window.scrollTo(0, document.body.scrollHeight-500);")
-        #     sb.driver.implicitly_wait(implicitly_wait)
-        #     sb.wait(scroll_wait)
         i = 0
         while True:
             i += 1
@@ -70,14 +66,14 @@ def main():
         #     "type": "pr",
         #     "url": "https://www.gucci.com/us/en/pr/men/bags-for-men/messengers-crossbody-bags-for-men/gucci-b-large-shoulder-bag-p-801041AZB5Z1060"
         # },
-        # {
-        #     "type": "pr",
-        #     "url": "https://www.gucci.com/us/en/pr/men/bags-for-men/messengers-crossbody-bags-for-men/gucci-b-large-shoulder-bag-p-801041AZB5Z1060"
-        # },
         {
-            "type": "search",
-            "url": "https://www.gucci.com/us/en/st/newsearchpage?searchString=bag&search-cat=header-search"
-        }
+            "type": "pr",
+            "url": "https://www.gucci.com/us/en/pr/men/bags-for-men/messengers-crossbody-bags-for-men/gucci-b-large-shoulder-bag-p-801041AZB5Z1060"
+        },
+        # {
+        #     "type": "search",
+        #     "url": "https://www.gucci.com/us/en/st/newsearchpage?searchString=bag&search-cat=header-search"
+        # }
     ]
     visited = set()
     while len(urls) > 0:
@@ -112,11 +108,13 @@ def main():
         if t == "pr":
             details, _ = extract_product_details(text)
             details["raw_tags"] = url.split("pr")[1].split("/")[1:-1]
+            details["url"] = url
+            details["source"] = url.split("/")[2].split(".")[1]
+            # print(json.dumps(details, indent=4))
 
-            json_location = dataset_location + "/".join(details["raw_tags"]) + "/"
+            json_location = dataset_location + f"/{details["source"]}/" + "/".join(details["raw_tags"]) + "/"
             os.makedirs(json_location, exist_ok=True)
             json_location = json_location + url.split('/')[-2] + "-" + name + ".json"
-
             with open(json_location, "w") as f:
                 json.dump(details, f, indent=4)
 
