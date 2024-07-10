@@ -8,7 +8,7 @@ from scrape_gucci_helpers import find_gucci_item_links, extract_gucci
 
 
 class ScrapeGucci(Scrape):
-    def scrape_product_search_results(self, url, implicitly_wait=5, load_wait=5, scroll_wait=5, page=None):
+    def scrape_product_search_results(self, url, implicitly_wait=5, load_wait=5, scroll_wait=5, page=2):
         text = self.load_from_cache(url)
         if text is not None:
             return text
