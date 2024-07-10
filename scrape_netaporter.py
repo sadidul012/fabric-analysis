@@ -7,7 +7,7 @@ from scrape import Scrape
 
 
 class ScrapeNetAPorter(Scrape):
-    def scrape_product_search_results(self, url, implicitly_wait=5, load_wait=5, scroll_wait=5, page=2, current_page=0):
+    def scrape_product_search_results(self, url, implicitly_wait=5, load_wait=5, scroll_wait=5, page=20, current_page=0):
         if current_page != 0:
             new_url = url + "&pageNumber=" + str(current_page + 1)
         else:
@@ -15,12 +15,16 @@ class ScrapeNetAPorter(Scrape):
 
         text = self.load_from_cache(new_url)
         if text is None:
-            with SB(**self.sb_params) as sb:
-                sb.driver.get(new_url)
-                sb.driver.implicitly_wait(implicitly_wait)
-                sb.wait(load_wait)
-                self.save_to_cache(new_url, sb.driver.page_source)
-                yield sb.driver.page_source
+            try:
+                with SB(**self.sb_params) as sb:
+                    sb.driver.get(new_url)
+                    sb.driver.implicitly_wait(implicitly_wait)
+                    sb.wait(load_wait)
+                    self.save_to_cache(new_url, sb.driver.page_source)
+                    yield sb.driver.page_source
+            except Exception as e:
+                print(e)
+                return None
         else:
             yield text
 
@@ -53,11 +57,9 @@ class ScrapeNetAPorter(Scrape):
         self.add_description(info.select_one("div.AccordionSection3#EDITORS_NOTES div.content").text)
         self.add_style_number(soup.select_one("div.ProductDetails87 div.PartNumber87.ProductDetails87__partNumber").text)
 
-        # sources = soup.select("div.ImageCarousel87__viewport li.ImageCarousel87__slide img")
-        # # print(sources["srcset"].split())
-        # print(len(sources))
-        # for source in sources:
-        #     print(source)
+        sources = soup.select("div.ImageCarousel87__viewport li.ImageCarousel87__slide img")
+        for source in sources:
+            self.append_image(source["src"])
 
         # # print(len(soup.select("div.ImageCarousel87__viewport li.ImageCarousel87__slide img[src]")))
         lis = info.select("div.AccordionSection3#SIZE_AND_FIT div.content li") + info.select("div.AccordionSection3#DETAILS_AND_CARE div.content li")
@@ -96,7 +98,13 @@ def main():
         # }
     ]
     # &pageNumber=2
-    scrape = ScrapeNetAPorter(urls)
+    scrape = ScrapeNetAPorter(
+        urls,
+        image_slider_container="div.ImageCarousel87__mainCarousel.ImageCarousel87__mainCarousel--allow2ndLevelZoom",
+        image_slider_next="button.ImageCarousel87__next",
+        n_slides=10,
+        product_page_removes=[".Overlay9__cover.Overlay9__cover--recentlyViewed"]
+    )
     scrape.scrape()
 
 

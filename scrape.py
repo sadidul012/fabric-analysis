@@ -5,17 +5,24 @@ import types
 
 from seleniumbase import SB
 from tqdm import tqdm
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as ExpectedConditions
+from selenium.webdriver.common.by import By
 
 
 class Scrape:
-    def __init__(self, urls):
-        self.cache_directory = "./data/temp/"
-        # self.sb_params = dict(uc=True, block_images=True, page_load_strategy="none", skip_js_waits=False, maximize=True, uc_subprocess=True)
-        self.sb_params = dict(uc=True, maximize=True)
-
-        # self.sb = SB(**self.sb_params)
+    def __init__(self, urls, image_slider_container=None, image_slider_next=None, product_page_removes=None, n_slides=0):
         self.urls = urls
+        self.image_slider_container = image_slider_container
+        self.image_slider_next = image_slider_next
+        self.product_page_removes = product_page_removes
+        self.n_slides = n_slides
+
         self.visited = set()
+
+        self.cache_directory = "./data/temp/"
+        # self.sb_params = dict(uc=True, maximize=True)
+        self.sb_params = dict(uc=True, maximize=True, uc_subprocess=True)
 
         self.result_dict = {
             "attributes": [],
@@ -59,6 +66,8 @@ class Scrape:
         self.result_dict["metadata"] = metadata
 
     def append_image(self, image):
+        if image[:2] == "//":
+            image = "https:" + image
         self.result_dict["images"].append(image)
 
     def file_name(self, url):
@@ -91,15 +100,30 @@ class Scrape:
             sb.driver.implicitly_wait(implicitly_wait)
             sb.wait(load_wait)
 
+            if self.product_page_removes is not None:
+                for remove in self.product_page_removes:
+                    sb.driver.execute_script("[...document.querySelectorAll('" + remove + "')].map(el => el.parentNode.removeChild(el))")
+
+            if self.image_slider_container is not None:
+                next_image = sb.driver.find_element(By.CSS_SELECTOR, self.image_slider_container)
+                next_image = next_image.find_element(By.CSS_SELECTOR, self.image_slider_next)
+                sb.driver.execute_script("arguments[0].scrollIntoView();", next_image)
+                WebDriverWait(sb.driver, implicitly_wait).until(ExpectedConditions.element_to_be_clickable(next_image))
+
+                for i in range(self.n_slides):
+                    next_image.click()
+                    sb.wait(load_wait)
+
             self.save_to_cache(url, sb.driver.page_source)
             return sb.driver.page_source
 
     def scrape(self):
-        progress_bar = tqdm(total=len(self.urls))
+        progress_bar = tqdm(total=1000)
 
         while len(self.urls) > 0:
             url = self.urls.pop(0)
             progress_bar.update()
+            progress_bar.set_postfix({"total": len(self.urls)})
             if url["url"] in self.visited:
                 continue
 
@@ -127,15 +151,14 @@ class Scrape:
                 # print(json.dumps(details, indent=4))
             if url_type == "search":
                 text = self.scrape_product_search_results(url)
-                links = []
 
                 if type(text) is str:
-                    links = list(self.extract_item_links(text))
+                    self.urls.extend(list(self.extract_item_links(text)))
                 elif isinstance(text, types.GeneratorType):
                     for txt in text:
                         txt = list(self.extract_item_links(txt))
-                        links.extend(txt)
-
+                        self.urls.extend(txt)
+                        progress_bar.set_postfix({"total": len(self.urls)})
+                        # progress_bar.n = len(self.urls)
                 # print(len(links))
                 # print(json.dumps(links, indent=4))
-                self.urls.extend(list(links))
