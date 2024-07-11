@@ -41,7 +41,8 @@ class ScrapeMrPorter(ScrapeMultiPageSearch):
             else:
                 self.append_attribute(li.text)
 
-        return self.result_dict
+        # print(json.dumps(self.result_dict, indent=4))
+        return self.return_result_dict()
 
     def extract_item_links(self, text):
         soup = BeautifulSoup(text, "html.parser")

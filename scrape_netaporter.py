@@ -1,3 +1,4 @@
+import json
 import re
 
 from bs4 import BeautifulSoup
@@ -41,7 +42,8 @@ class ScrapeNetAPorter(ScrapeMultiPageSearch):
             else:
                 self.append_attribute(li.text)
 
-        return self.result_dict
+        # print(json.dumps(self.result_dict, indent=4))
+        return self.return_result_dict()
 
     def extract_item_links(self, text):
         soup = BeautifulSoup(text, "html.parser")
@@ -67,6 +69,10 @@ def main():
         # {
         #     "type": "details",
         #     "url": "https://www.net-a-porter.com/en-us/shop/product/the-row/clothing/blazers/marina-oversized-wool-blazer/1647597332737226"
+        # },
+        # {
+        #     "type": "details",
+        #     "url": "https://www.net-a-porter.com/en-us/shop/product/jacquemus/clothing/tanks-and-camis/knitted-tank/1647597343443767"
         # }
     ]
     # &pageNumber=2

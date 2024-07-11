@@ -25,10 +25,9 @@ class Scrape:
         # self.sb_params = dict(uc=True, maximize=True)
         self.sb_params = dict(uc=True, maximize=True, uc_subprocess=True)
 
-        self.result_dict = {
-            "attributes": [],
-            "images": []
-        }
+        self.result_dict = {}
+        # initialize the result dict with initial values
+        self.return_result_dict()
 
     def scrape_product_search_results(self, url, implicitly_wait=5, load_wait=5, scroll_wait=5, page=None):
         return []
@@ -38,6 +37,14 @@ class Scrape:
 
     def extract_item_links(self, text):
         return []
+
+    def return_result_dict(self):
+        result = self.result_dict.copy()
+        self.result_dict = {
+            "attributes": [],
+            "images": []
+        }
+        return result
 
     def add_raw_tags(self, tags):
         self.result_dict["raw_tags"] = tags
@@ -90,7 +97,7 @@ class Scrape:
         with open(file_name, "w") as f:
             f.write(text)
 
-    def scrape_single_page(self, url, implicitly_wait=5, load_wait=5):
+    def scrape_single_page(self, url, implicitly_wait=5, load_wait=5, retry=0):
         text = self.load_from_cache(url)
         if text is not None:
             return text
@@ -117,7 +124,11 @@ class Scrape:
                 self.save_to_cache(url, sb.driver.page_source)
                 return sb.driver.page_source
         except selenium.common.exceptions.TimeoutException:
-            return self.scrape_single_page(url, implicitly_wait, load_wait)
+            if retry < 3:
+                print("retrying " + url)
+                return self.scrape_single_page(url, implicitly_wait, load_wait, retry + 1)
+            else:
+                return None
         except Exception as e:
             return None
 
@@ -145,34 +156,41 @@ class Scrape:
                 }
                 text = self.scrape_single_page(url)
                 if text is not None:
-                    details = {**self.extract_details(text, url), **details}
+                    try:
+                        details = {**self.extract_details(text, url), **details}
 
-                    json_location = dataset_location + f"/{details["source"]}/" + "/".join(details["raw_tags"]) + "/"
-                    os.makedirs(json_location, exist_ok=True)
-                    json_location = json_location + url.split('/')[-2] + "-" + name + ".json"
-                    with open(json_location, "w") as f:
-                        json.dump(details, f, indent=4)
+                        json_location = dataset_location + f"/{details["source"]}/" + "/".join(details["raw_tags"]) + "/"
+                        os.makedirs(json_location, exist_ok=True)
+                        json_location = json_location + url.split('/')[-2] + "-" + name + ".json"
+                        with open(json_location, "w") as f:
+                            json.dump(details, f, indent=4)
+                    except Exception as e:
+                        print(e)
             if url_type == "search":
                 text = self.scrape_product_search_results(url)
-
-                if type(text) is str:
+                if text is None:
+                    pass
+                elif type(text) is str:
                     self.urls.extend(list(self.extract_item_links(text)))
                 elif isinstance(text, types.GeneratorType):
                     for txt in text:
-                        txt = list(self.extract_item_links(txt))
-                        self.urls.extend(txt)
-                        progress_bar.set_postfix({"total": len(self.urls)})
+                        try:
+                            txt = list(self.extract_item_links(txt))
+                            self.urls.extend(txt)
+                            progress_bar.set_postfix({"total": len(self.urls)})
+                        except Exception as e:
+                            print(e)
 
 
 class ScrapeMultiPageSearch(Scrape):
-    def scrape_product_search_results(self, url, implicitly_wait=5, load_wait=5, scroll_wait=5, page=20, current_page=0):
+    def scrape_product_search_results(self, url, implicitly_wait=5, load_wait=5, scroll_wait=5, page=20, current_page=0, retry=0):
         if current_page != 0:
             new_url = url + "&pageNumber=" + str(current_page + 1)
         else:
             new_url = url
 
         text = self.load_from_cache(new_url)
-        if text is None:
+        if text is None and False:
             try:
                 with SB(**self.sb_params) as sb:
                     sb.driver.get(new_url)
@@ -181,7 +199,11 @@ class ScrapeMultiPageSearch(Scrape):
                     self.save_to_cache(new_url, sb.driver.page_source)
                     yield sb.driver.page_source
             except selenium.common.exceptions.TimeoutException:
-                yield from self.scrape_product_search_results(url, implicitly_wait, load_wait, scroll_wait, page, current_page)
+                if retry < 3:
+                    print("retrying", url, current_page)
+                    yield from self.scrape_product_search_results(url, implicitly_wait, load_wait, scroll_wait, page, current_page, retry + 1)
+                else:
+                    return None
             except Exception as e:
                 print(e)
                 return None
