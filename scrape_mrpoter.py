@@ -47,6 +47,7 @@ class ScrapeMrPorter(ScrapeMultiPageSearch):
     def extract_item_links(self, text):
         soup = BeautifulSoup(text, "html.parser")
         result_grid = soup.find("div", {"class": "ProductGrid53"})
+
         result_grid = result_grid.find_all("div", {"class": "ProductList0__productItemContainer"})
         for result in result_grid:
             result = result.find("a")
@@ -59,18 +60,7 @@ class ScrapeMrPorter(ScrapeMultiPageSearch):
         return None
 
 
-def main():
-    urls = [
-        {
-            "type": "search",
-            "url": "https://www.mrporter.com/en-us/mens/clothing?facet=ads_f11001_ntk_cs%253A%2522ACNE%2BSTUDIOS%2522&facet=ads_f11001_ntk_cs%253A%2522A.P.C.%2522&facet=ads_f11001_ntk_cs%253A%2522AMI%2BPARIS%2522&facet=ads_f11001_ntk_cs%253A%2522AMIRI%2522&facet=ads_f11001_ntk_cs%253A%2522BALENCIAGA%2522&facet=ads_f11001_ntk_cs%253A%2522BODE%2522&facet=ads_f11001_ntk_cs%253A%2522BOTTEGA%2BVENETA%2522&facet=ads_f11001_ntk_cs%253A%2522BRUNELLO%2BCUCINELLI%2522&facet=ads_f11001_ntk_cs%253A%2522LEMAIRE%2522&facet=ads_f11001_ntk_cs%253A%2522OUR%2BLEGACY%2522"
-        },
-        # {
-        #     "type": "details",
-        #     "url": "https://www.mrporter.com/en-us/mens/product/brunello-cucinelli/clothing/plain-t-shirts/silk-and-cotton-blend-jersey-t-shirt/1647597341958447"
-        # }
-    ]
-    # &pageNumber=2
+def main(urls):
     scrape = ScrapeMrPorter(
         urls,
         image_slider_container="div.ImageCarousel87__mainCarousel.ImageCarousel87__mainCarousel--allow2ndLevelZoom",
@@ -81,5 +71,14 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main([
+        {
+            "type": "search",
+            "url": "https://www.mrporter.com/en-us/mens/clothing?facet=ads_f11001_ntk_cs%253A%2522ACNE%2BSTUDIOS%2522&facet=ads_f11001_ntk_cs%253A%2522A.P.C.%2522&facet=ads_f11001_ntk_cs%253A%2522AMI%2BPARIS%2522&facet=ads_f11001_ntk_cs%253A%2522AMIRI%2522&facet=ads_f11001_ntk_cs%253A%2522BALENCIAGA%2522&facet=ads_f11001_ntk_cs%253A%2522BODE%2522&facet=ads_f11001_ntk_cs%253A%2522BOTTEGA%2BVENETA%2522&facet=ads_f11001_ntk_cs%253A%2522BRUNELLO%2BCUCINELLI%2522&facet=ads_f11001_ntk_cs%253A%2522LEMAIRE%2522&facet=ads_f11001_ntk_cs%253A%2522OUR%2BLEGACY%2522"
+        },
+        # {
+        #     "type": "details",
+        #     "url": "https://www.mrporter.com/en-us/mens/product/brunello-cucinelli/clothing/plain-t-shirts/silk-and-cotton-blend-jersey-t-shirt/1647597341958447"
+        # }
+    ])
 

@@ -1,4 +1,3 @@
-import json
 import re
 
 from bs4 import BeautifulSoup
@@ -60,8 +59,19 @@ class ScrapeNetAPorter(ScrapeMultiPageSearch):
         return None
 
 
-def main():
-    urls = [
+def main(urls):
+    scrape = ScrapeNetAPorter(
+        urls,
+        image_slider_container="div.ImageCarousel87__mainCarousel.ImageCarousel87__mainCarousel--allow2ndLevelZoom",
+        image_slider_next="button.ImageCarousel87__next",
+        n_slides=10,
+        product_page_removes=[".Overlay9__cover.Overlay9__cover--recentlyViewed"]
+    )
+    scrape.scrape()
+
+
+if __name__ == '__main__':
+    main([
         {
             "type": "search",
             "url": "https://www.net-a-porter.com/en-us/shop/clothing?facet=ads_f10003_ntk_cs%253A%2522BOTTEGA%2BVENETA%2522&facet=ads_f10003_ntk_cs%253A%2522BRUNELLO%2BCUCINELLI%2522&facet=ads_f10003_ntk_cs%253A%2522CHLO%25C3%2589%2522&facet=ads_f10003_ntk_cs%253A%2522CULT%2BGAIA%2522&facet=ads_f10003_ntk_cs%253A%2522ELIE%2BSAAB%2522&facet=ads_f10003_ntk_cs%253A%2522GANNI%2522&facet=ads_f10003_ntk_cs%253A%2522JACQUEMUS%2522&facet=ads_f10003_ntk_cs%253A%2522THE%2BROW%2522&facet=ads_f10003_ntk_cs%253A%2522MARNI%2522&facet=ads_f10003_ntk_cs%253A%2522MAX%2BMARA%2522"
@@ -74,18 +84,5 @@ def main():
         #     "type": "details",
         #     "url": "https://www.net-a-porter.com/en-us/shop/product/jacquemus/clothing/tanks-and-camis/knitted-tank/1647597343443767"
         # }
-    ]
-    # &pageNumber=2
-    scrape = ScrapeNetAPorter(
-        urls,
-        image_slider_container="div.ImageCarousel87__mainCarousel.ImageCarousel87__mainCarousel--allow2ndLevelZoom",
-        image_slider_next="button.ImageCarousel87__next",
-        n_slides=10,
-        product_page_removes=[".Overlay9__cover.Overlay9__cover--recentlyViewed"]
-    )
-    scrape.scrape()
-
-
-if __name__ == '__main__':
-    main()
+    ])
 

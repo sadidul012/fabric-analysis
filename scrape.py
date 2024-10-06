@@ -79,8 +79,11 @@ class Scrape:
         self.result_dict["images"].append(image)
 
     def file_name(self, url):
-        # name = url.split('/')[-1]
-        file_name = self.cache_directory + "/" + hashlib.sha256(url.encode("ascii"), usedforsecurity=True).hexdigest() + ".html"
+        try:
+            file_name = self.cache_directory + "/" + hashlib.sha256(url.encode("ascii"), usedforsecurity=True).hexdigest() + ".html"
+        except Exception as e:
+            name = url.split('/')[-1]
+            file_name = self.cache_directory + "/" + name + ".html"
         return file_name
 
     def load_from_cache(self, url):
@@ -134,7 +137,6 @@ class Scrape:
 
     def scrape(self):
         progress_bar = tqdm(total=1000)
-
         while len(self.urls) > 0:
             url = self.urls.pop(0)
             progress_bar.update()
@@ -183,14 +185,13 @@ class Scrape:
 
 
 class ScrapeMultiPageSearch(Scrape):
-    def scrape_product_search_results(self, url, implicitly_wait=5, load_wait=5, scroll_wait=5, page=20, current_page=0, retry=0):
+    def scrape_product_search_results(self, url, implicitly_wait=5, load_wait=5, scroll_wait=5, page=1, current_page=0, retry=0):
         if current_page != 0:
             new_url = url + "&pageNumber=" + str(current_page + 1)
         else:
             new_url = url
-
         text = self.load_from_cache(new_url)
-        if text is None and False:
+        if text is None:
             try:
                 with SB(**self.sb_params) as sb:
                     sb.driver.get(new_url)
