@@ -12,7 +12,6 @@ import pillow_avif
 def download_image(url, location, nth):
     try:
         image_location = location[:-4] + f"-image-{nth}.png"
-        print(image_location)
         if not os.path.exists(image_location):
             header = {
                 "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -34,8 +33,6 @@ def download_image(url, location, nth):
             img.save(location[:-4] + f"-image-{nth}.png")
         return 0
     except Exception as e:
-        print(url)
-        print(e)
         return 1
 
 
