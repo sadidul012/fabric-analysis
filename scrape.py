@@ -109,6 +109,7 @@ class Scrape:
                 sb.driver.get(url)
                 sb.driver.implicitly_wait(implicitly_wait)
                 sb.wait(load_wait)
+                self.save_to_cache(url, sb.driver.page_source)
 
                 if self.product_page_removes is not None:
                     for remove in self.product_page_removes:
@@ -133,6 +134,8 @@ class Scrape:
             else:
                 return None
         except Exception as e:
+            print(url)
+            print("error", e)
             return None
 
     def scrape(self):
