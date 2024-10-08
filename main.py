@@ -24,12 +24,12 @@ if __name__ == '__main__':
             print(url)
             if brand == "www.mrporter.com":
                 print("collecting from mrporter...")
-                mr_porter([
-                    {
-                        "type": "search",
-                        "url": url
-                    }
-                ])
+                # mr_porter([
+                #     {
+                #         "type": "search",
+                #         "url": url
+                #     }
+                # ])
             elif brand == "www.net-a-porter.com":
                 print("collecting from net-a-porter...")
                 net_a_porter([

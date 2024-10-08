@@ -7,7 +7,7 @@ from scrape import ScrapeMultiPageSearch
 class ScrapeNetAPorter(ScrapeMultiPageSearch):
     def extract_details(self, text, url):
         soup = BeautifulSoup(text, "html.parser")
-        basic_info = soup.find("div", {"class": "ProductDetails87__basicInfo"})
+        basic_info = soup.find("div", {"class": "ProductDetails88__basicInfo"})
 
         metas = soup.find_all('meta')
         metadata = {}
@@ -21,19 +21,19 @@ class ScrapeNetAPorter(ScrapeMultiPageSearch):
         self.add_metadata(metadata)
         self.add_raw_tags(url.split("product")[1].split("/")[1:-1])
 
-        self.add_name(basic_info.select_one("h1.ProductInformation87__designer").text)
-        self.add_subtitle(basic_info.select_one("p.ProductInformation87__name").text)
+        self.add_name(basic_info.select_one("h1.ProductInformation88__designer").text)
+        self.add_subtitle(basic_info.select_one("p.ProductInformation88__name").text)
         self.add_price(basic_info.select_one("span.PriceWithSchema10__value.PriceWithSchema10__value--details").text)
 
-        info = soup.select_one("div.EditorialAccordion87.EditorialAccordion87--pdpAccordion.ProductDetails87__editorialAccordion")
+        info = soup.select_one("div.EditorialAccordion88.EditorialAccordion88--pdpAccordion.ProductDetails88__editorialAccordion")
         self.add_description(info.select_one("div.AccordionSection3#EDITORS_NOTES div.content").text)
-        self.add_style_number(soup.select_one("div.ProductDetails87 div.PartNumber87.ProductDetails87__partNumber").text)
+        self.add_style_number(soup.select_one("div.ProductDetails88 div.PartNumber88.ProductDetails88__partNumber").text)
 
-        sources = soup.select("div.ImageCarousel87__viewport li.ImageCarousel87__slide img")
+        sources = soup.select("div.ImageCarousel88__viewport li.ImageCarousel88__slide img")
         for source in sources:
             self.append_image(source["src"])
 
-        # # print(len(soup.select("div.ImageCarousel87__viewport li.ImageCarousel87__slide img[src]")))
+        # # print(len(soup.select("div.ImageCarousel88__viewport li.ImageCarousel88__slide img[src]")))
         lis = info.select("div.AccordionSection3#SIZE_AND_FIT div.content li") + info.select("div.AccordionSection3#DETAILS_AND_CARE div.content li")
         for li in lis:
             if re.match("Model measures(.)*", li.text):
@@ -62,8 +62,8 @@ class ScrapeNetAPorter(ScrapeMultiPageSearch):
 def main(urls):
     scrape = ScrapeNetAPorter(
         urls,
-        image_slider_container="div.ImageCarousel87__mainCarousel.ImageCarousel87__mainCarousel--allow2ndLevelZoom",
-        image_slider_next="button.ImageCarousel87__next",
+        image_slider_container="div.ImageCarousel88__mainCarousel.ImageCarousel88__mainCarousel--allow2ndLevelZoom",
+        image_slider_next="button.ImageCarousel88__next",
         n_slides=10,
         product_page_removes=[".Overlay9__cover.Overlay9__cover--recentlyViewed"]
     )
